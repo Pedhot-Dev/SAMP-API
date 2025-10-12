@@ -62,11 +62,14 @@ jobs:
       - name: 📦 Package build result
         run: |
           mkdir -p output
-          if "${{ matrix.compiler }}" == "msvc" (
+          if ($env:matrix_compiler -eq "msvc") {
             7z a output/build-msvc.zip ./build-msvc/*
-          ) else (
+          } else {
             7z a output/build-mingw.zip ./build-mingw/*
-          )
+          }
+        env:
+          matrix_compiler: ${{ matrix.compiler }}
+
 
       - name: 📤 Upload Artifacts
         uses: actions/upload-artifact@v4
