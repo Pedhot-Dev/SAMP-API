@@ -1,4 +1,4 @@
-name: CMake Build (MSVC & MinGW)
+name: CMake Build (MSVC)
 
 on:
   push:
@@ -10,10 +10,6 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        compiler: [msvc, mingw]
 
     steps:
       - name: 🧾 Checkout source
@@ -28,33 +24,12 @@ jobs:
       # ============ BUILD DENGAN MSVC =============
       # ============================================
       - name: 🧱 Configure (MSVC)
-        if: matrix.compiler == 'msvc'
         run: |
           cmake -B build-msvc -G "Visual Studio 17 2022" -A Win32 -DCMAKE_BUILD_TYPE=Release
 
       - name: 🔨 Build (MSVC)
-        if: matrix.compiler == 'msvc'
         run: |
           cmake --build build-msvc --config Release
-
-      # ============================================
-      # ============ BUILD DENGAN MINGW ============
-      # ============================================
-      - name: 🧰 Setup MinGW
-        if: matrix.compiler == 'mingw'
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x86_64
-
-      - name: 🧱 Configure (MinGW)
-        if: matrix.compiler == 'mingw'
-        run: |
-          cmake -B build-mingw -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
-
-      - name: 🔨 Build (MinGW)
-        if: matrix.compiler == 'mingw'
-        run: |
-          cmake --build build-mingw --config Release
 
       # ============================================
       # ============ PACK DAN UPLOAD ARTIFAK =======
@@ -62,19 +37,12 @@ jobs:
       - name: 📦 Package build result
         run: |
           mkdir -p output
-          if ($env:matrix_compiler -eq "msvc") {
-            7z a output/build-msvc.zip ./build-msvc/*
-          } else {
-            7z a output/build-mingw.zip ./build-mingw/*
-          }
-        env:
-          matrix_compiler: ${{ matrix.compiler }}
-
-
+          7z a output/build-msvc.zip ./build-msvc/*
+      
       - name: 📤 Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.compiler }}
+          name: build-msvc
           path: output/
 
   # ================================================
@@ -89,16 +57,15 @@ jobs:
       - name: 🧾 Checkout repository
         uses: actions/checkout@v4
 
-      - name: 📥 Download all build artifacts
+      - name: 📥 Download build artifact
         uses: actions/download-artifact@v4
         with:
+          name: build-msvc
           path: ./artifacts
 
       - name: 🚀 Upload binaries to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            artifacts/**/build-msvc.zip
-            artifacts/**/build-mingw.zip
+          files: artifacts/build-msvc.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
