@@ -2,11 +2,7 @@ name: CMake Build (MSVC & MinGW)
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  # Jalankan otomatis saat tag dibuat → buat release otomatis
-  push:
+    branches: [ multiver ]
     tags:
       - 'v*'   # Contoh: v1.0.0
   workflow_dispatch:
